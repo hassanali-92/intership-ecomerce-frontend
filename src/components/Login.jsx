@@ -18,7 +18,7 @@ const Login = ({ setPage, setUser }) => {
 
     try {
       // Backend Login API Request
-      const response = await axios.post('${import.meta.env.VITE_API_BASE_URL}/api/users/login', { email, password });
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, { email, password });
       
       // Check: Backend response mein direct token bhej raha hai
       if (response.data && response.data.token) {

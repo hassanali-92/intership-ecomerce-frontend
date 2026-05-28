@@ -38,7 +38,7 @@ const AddProductModal = ({ isOpen, onClose }) => { // 🌟 Prop se 'refetch' hat
 
     try {
       // 🌟 Headers ke andar Authorization Bearer Token pass kiya
-      const response = await axios.post('${import.meta.env.VITE_API_BASE_URL}/api/products/create', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/products/create`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}` // 🔥 Yeh line backend authorization check ko pass karegi

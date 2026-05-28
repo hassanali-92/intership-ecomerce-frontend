@@ -18,7 +18,7 @@ const Signup = ({ setPage }) => {
 
     try {
       // Backend Signup API Request
-      const response = await axios.post('${import.meta.env.VITE_API_BASE_URL}/api/users/register', { 
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/register`, { 
         name, 
         email, 
         password 
