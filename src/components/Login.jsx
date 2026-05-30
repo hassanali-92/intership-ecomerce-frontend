@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 
 const Login = ({ setPage, setUser }) => {
   const [email, setEmail] = useState('');
@@ -20,19 +20,24 @@ const Login = ({ setPage, setUser }) => {
       // Backend Login API Request
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, { email, password });
       
-      // Check: Backend response mein direct token bhej raha hai
       if (response.data && response.data.token) {
         
-        // Backend ke 'role' string ko check karke formatted object banana
+        // 🔐 Double Check: Frontend par bhi safety layer laga di taake admin user-dashboard par na ghuse
+        if (response.data.role === 'admin') {
+          toast.error('Access Denied: Please use the Admin Portal.', { id: toastId });
+          setPage('admin-login'); // Auto redirect to admin login
+          return;
+        }
+
         const formattedUser = {
           id: response.data._id,
           name: response.data.name,
           email: response.data.email,
           role: response.data.role,
-          isAdmin: response.data.role === 'admin' // 👑 Navbar control karne ke liye
+          isAdmin: false // Kyunki yeh sirf user login portal hai
         };
 
-        // 1. Credentials ko LocalStorage mein hamesha ke liye save kiya
+        // 1. Credentials ko LocalStorage mein save kiya
         localStorage.setItem('shop_token', response.data.token);
         localStorage.setItem('shop_user', JSON.stringify(formattedUser));
         
@@ -47,8 +52,17 @@ const Login = ({ setPage, setUser }) => {
       }
     } catch (error) {
       console.error('Login Error:', error);
-      const errorMsg = error.response?.data?.message || 'Invalid Credentials or Server Error!';
-      toast.error(errorMsg, { id: toastId });
+      
+      // 👑 Smart Error Handling: Agar admin login karne ki koshish karega toh backend 403 bhejega
+      if (error.response?.status === 403) {
+        toast.error('Admins are not allowed here! Redirecting to Admin Portal...', { id: toastId });
+        setTimeout(() => {
+          setPage('admin-login'); // 1.5 seconds ke baad auto-redirect ho jayega
+        }, 1500);
+      } else {
+        const errorMsg = error.response?.data?.message || 'Invalid Credentials or Server Error!';
+        toast.error(errorMsg, { id: toastId });
+      }
     } finally {
       setLoading(false);
     }
@@ -58,6 +72,18 @@ const Login = ({ setPage, setUser }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-md border border-shade-border">
         
+        {/* 👑 Quick Admin Access Portal Link */}
+        <div className="flex justify-end mb-2">
+          <button 
+            type="button"
+            onClick={() => setPage('admin-login')}
+            className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors border border-red-200"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Admin Portal
+          </button>
+        </div>
+
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-dark">Sign In</h2>
           <p className="text-sm text-secondary mt-2">Welcome back! Please enter your details.</p>
@@ -133,11 +159,21 @@ const Login = ({ setPage, setUser }) => {
           </button>
         </form>
 
-        <div className="text-sm text-center text-secondary mt-6">
-          Don't have an account?{' '}
-          <button onClick={() => setPage('signup')} className="text-primary font-semibold hover:underline bg-transparent border-none cursor-pointer">
-            Sign up
-          </button>
+        <div className="text-sm text-center text-secondary mt-6 flex flex-col gap-2">
+          <div>
+            Don't have an account?{' '}
+            <button type="button" onClick={() => setPage('signup')} className="text-primary font-semibold hover:underline bg-transparent border-none cursor-pointer">
+              Sign up
+            </button>
+          </div>
+          
+          {/* Alternative Footer Link for Admin */}
+          <div className="text-xs pt-2 border-t border-gray-100">
+            Are you a system manager?{' '}
+            <button type="button" onClick={() => setPage('admin-login')} className="text-red-600 font-medium hover:underline bg-transparent border-none cursor-pointer">
+              Login to Admin Panel
+            </button>
+          </div>
         </div>
       </div>
     </div>

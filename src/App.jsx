@@ -21,6 +21,10 @@ import Orders from './components/Orders';
 import Login from './components/Login'; 
 import Signup from './components/Signup';
 
+// Naye Admin Components Import Kiye
+import AdminLogin from './components/AdminLogin';
+import AdminRegister from './components/AdminRegister';
+
 // Category Banner Images
 import homeBanner from './assets/Image/backgrounds/image 98.png';
 import electronicsBanner from './assets/Image/backgrounds/image 106.png';
@@ -50,11 +54,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // 🌟 GLOBAL FILTERS STATES: Header aur ProductListing ko aapas mein sync karne ke liye
+  // GLOBAL FILTERS STATES
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // Dependency array mein 'currentPage' dala taake login/logout hote hi state update ho jaye bina reload kiye
   useEffect(() => {
     const loggedInUser = localStorage.getItem('shop_user');
     if (loggedInUser) {
@@ -64,7 +67,6 @@ function App() {
     }
   }, [currentPage]);
 
-  // Logout handler function
   const handleLogout = () => {
     localStorage.removeItem('shop_token');
     localStorage.removeItem('shop_user');
@@ -97,7 +99,6 @@ function App() {
   const renderContent = () => {
     switch (currentPage) {
       case 'listing':
-        // 🌟 PASSING FILTERS: Listing page ko states bhejin taake dynamic filters apply hon
         return (
           <ProductListing 
             setPage={setCurrentPage} 
@@ -122,13 +123,15 @@ function App() {
         return <Login setPage={setCurrentPage} setUser={setUser} />;
       case 'signup':
         return <Signup setPage={setCurrentPage} />;
+      case 'admin-login':
+        return <AdminLogin setPage={setCurrentPage} setUser={setUser} />;
+      case 'admin-register':
+        return <AdminRegister setPage={setCurrentPage} />;
       default:
         return (
           <div className="container">
             <Hero setPage={setCurrentPage} user={user} /> 
-            
             <Deals />
-
             <CategorySection
               title="Home and outdoor"
               bannerBg="#FFE6BF"
@@ -136,7 +139,6 @@ function App() {
               items={homeAndOutdoorItems}
               setPage={setCurrentPage}
             />
-
             <CategorySection
               title="Consumer electronics"
               bannerBg="#E5F1FF"
@@ -144,7 +146,6 @@ function App() {
               items={electronicsItems}
               setPage={setCurrentPage}
             />
-
             <InquiryForm />
             <RecommendedItems setPage={setCurrentPage} setSelectedProduct={setSelectedProduct} />
             <Services />
@@ -154,12 +155,15 @@ function App() {
     }
   };
 
+  // 🔐 Check karne ke liye ke kya current page koi Auth (Login/Signup) screen hai
+  const isAuthPage = ['login', 'signup', 'admin-login', 'admin-register'].includes(currentPage);
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Toaster position="top-center" reverseOrder={false} />
 
-      {/* Header section conditional rendering */}
-      {currentPage !== 'login' && currentPage !== 'signup' && (
+      {/* Header tabhi aayega jab Auth page NAHI hoga */}
+      {!isAuthPage && (
         <Header 
           setPage={setCurrentPage} 
           user={user} 
@@ -175,12 +179,15 @@ function App() {
         {renderContent()}
       </main>
 
-      {/* Newsletter Section */}
-      {currentPage !== 'login' && currentPage !== 'signup' && (
+      {/* Newsletter tabhi aayega jab Auth page NAHI hoga */}
+      {!isAuthPage && (
         <Newsletter />
       )}
       
-      <Footer />
+      {/* 🛠️ FIX: Footer ko bhi check block mein dal diya, ab Admin login/signup par nahi dikhega */}
+      {!isAuthPage && (
+        <Footer />
+      )}
     </div>
   );
 }
